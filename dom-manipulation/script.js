@@ -5,6 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const newQuoteText = document.getElementById('newQuoteText');
   const newQuoteCategory = document.getElementById('newQuoteCategory');
   const lastSelectedCategory = localStorage.getItem('lastSelectedCategory') || 'all';
+  const serverApiUrl = 'https://jsonplaceholder.typicode.com/posts'; 
+  const syncInterval = 60000; 
 
   categoryFilter.value = lastSelectedCategory;
   filterQuotes();
@@ -29,6 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const newQuote = { text: quoteText, category: quoteCategory };
       quotes.push(newQuote);
       localStorage.setItem('quotes', JSON.stringify(quotes));
+
+      postQuoteToServer(newQuote);
 
       populateCategories();
 
@@ -88,6 +92,38 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     fileReader.readAsText(event.target.files[0]);
   };
+
+  const syncWithServer = async () => {
+    try {
+      const response = await fetch(serverApiUrl);
+      const serverQuotes = await response.json();
+
+      quotes.push(...serverQuotes);
+      localStorage.setItem('quotes', JSON.stringify(quotes));
+      populateCategories();
+      filterQuotes();
+      alert('Quotes have been updated with the latest from the server.');
+    } catch (error) {
+      console.error('Error syncing with the server:', error);
+    }
+  };
+
+  const postQuoteToServer = async (newQuote) => {
+    try {
+      await fetch(serverApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newQuote)
+      });
+      console.log('New quote posted to server');
+    } catch (error) {
+      console.error('Error posting new quote to the server:', error);
+    }
+  };
+
+  setInterval(syncWithServer, syncInterval);
 
   showRandomQuote();
 });
