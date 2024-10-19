@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const lastSelectedCategory = localStorage.getItem('lastSelectedCategory') || 'all';
   const serverApiUrl = 'https://jsonplaceholder.typicode.com/posts'; 
   const syncInterval = 60000; 
-
+  
   categoryFilter.value = lastSelectedCategory;
   filterQuotes();
 
@@ -93,18 +93,23 @@ document.addEventListener('DOMContentLoaded', () => {
     fileReader.readAsText(event.target.files[0]);
   };
 
-  const syncWithServer = async () => {
+  const fetchQuotesFromServer = async () => {
     try {
       const response = await fetch(serverApiUrl);
       const serverQuotes = await response.json();
 
-      quotes.push(...serverQuotes);
+      serverQuotes.forEach(serverQuote => {
+        if (!quotes.some(localQuote => localQuote.text === serverQuote.text)) {
+          quotes.push(serverQuote); // Add server quote if it doesn't exist locally
+        }
+      });
+
       localStorage.setItem('quotes', JSON.stringify(quotes));
       populateCategories();
       filterQuotes();
       alert('Quotes have been updated with the latest from the server.');
     } catch (error) {
-      console.error('Error syncing with the server:', error);
+      console.error('Error fetching quotes from the server:', error);
     }
   };
 
@@ -123,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  setInterval(syncWithServer, syncInterval);
+  setInterval(fetchQuotesFromServer, syncInterval);
 
   showRandomQuote();
 });
