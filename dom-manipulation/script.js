@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const lastSelectedCategory = localStorage.getItem('lastSelectedCategory') || 'all';
   const serverApiUrl = 'https://jsonplaceholder.typicode.com/posts'; 
   const syncInterval = 60000; 
-  
+
   categoryFilter.value = lastSelectedCategory;
   filterQuotes();
 
@@ -95,7 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const syncQuotes = async (newQuote = null) => {
     try {
-      
       const response = await fetchQuotesFromServer();
 
       const serverQuotes = response || [];
@@ -114,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await postQuoteToServer(newQuote);
       }
 
-      alert('Quotes have been synced with the server.');
+      alert('Quotes synced with server!'); 
     } catch (error) {
       console.error('Error syncing quotes with the server:', error);
     }
