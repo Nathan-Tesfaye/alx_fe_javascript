@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const lastSelectedCategory = localStorage.getItem('lastSelectedCategory') || 'all';
   const serverApiUrl = 'https://jsonplaceholder.typicode.com/posts'; 
   const syncInterval = 60000; 
-  
+
   categoryFilter.value = lastSelectedCategory;
   filterQuotes();
 
@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
       quotes.push(newQuote);
       localStorage.setItem('quotes', JSON.stringify(quotes));
 
-      postQuoteToServer(newQuote);
+      syncQuotes();
 
       populateCategories();
 
@@ -93,10 +93,11 @@ document.addEventListener('DOMContentLoaded', () => {
     fileReader.readAsText(event.target.files[0]);
   };
 
-  const fetchQuotesFromServer = async () => {
+  const syncQuotes = async () => {
     try {
-      const response = await fetch(serverApiUrl);
-      const serverQuotes = await response.json();
+      const response = await fetchQuotesFromServer();
+
+      const serverQuotes = response || [];
 
       serverQuotes.forEach(serverQuote => {
         if (!quotes.some(localQuote => localQuote.text === serverQuote.text)) {
@@ -107,28 +108,24 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem('quotes', JSON.stringify(quotes));
       populateCategories();
       filterQuotes();
-      alert('Quotes have been updated with the latest from the server.');
+      alert('Quotes have been synced with the server.');
+    } catch (error) {
+      console.error('Error syncing quotes with the server:', error);
+    }
+  };
+
+  const fetchQuotesFromServer = async () => {
+    try {
+      const response = await fetch(serverApiUrl);
+      const serverQuotes = await response.json();
+      return serverQuotes;
     } catch (error) {
       console.error('Error fetching quotes from the server:', error);
+      return [];
     }
   };
 
-  const postQuoteToServer = async (newQuote) => {
-    try {
-      await fetch(serverApiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(newQuote)
-      });
-      console.log('New quote posted to server');
-    } catch (error) {
-      console.error('Error posting new quote to the server:', error);
-    }
-  };
-
-  setInterval(fetchQuotesFromServer, syncInterval);
+  setInterval(syncQuotes, syncInterval);
 
   showRandomQuote();
 });
